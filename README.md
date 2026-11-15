@@ -1,3 +1,13 @@
+# HTML Widget Embed Enhanced
+
+A fork of [HTML Widget Embed](https://github.com/MrDongShan/obsidian-html-widget) by MrDongShan, from its version 0.3.1 (MIT licence, kept in `LICENSE`). It installs as `html-widget-embed-enhanced`, beside the original; turn the original off when this one is on, since both handle the `html-embed` code block.
+
+**What changed (0.3.1-enhanced.1):** widgets render in pop-out windows. A widget with automatic height starts 1px tall and reports its height to the window it sits in; the original listened only to the main window, so in a pop-out (Obsidian's *Open in new window*, or plugins such as Folder Spaces and Window Spaces) the widget stayed 1px tall and looked missing. The fork listens to every window, those open when it loads and each one opened later (`workspace.on('window-open')`), and sets the height of the iframe in the window that received the report. Nothing else differs from upstream.
+
+The original README follows.
+
+---
+
 # HTML Widget Embed
 
 Embed a vault-local `.html` file inside an Obsidian note as a sandboxed iframe — for interactive diagrams, step-through explainers, small simulations, or anything else you built as a standalone page.

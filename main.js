@@ -65,11 +65,27 @@ module.exports = class HtmlWidgetEmbedPlugin extends Plugin {
     );
     this.registerMarkdownPostProcessor((el, ctx) => this.renderEmbeds(el, ctx));
 
-    // 单个全局监听：谁报高度，就把对应 iframe 撑到多高
-    this.registerDomEvent(window, 'message', (event) => {
+    // Every window of the app is listened to: the main one, pop-outs open now (Folder Spaces, Window Spaces and
+    // "Open in new window" put notes in them) and each pop-out opened later. A widget reports its height to the
+    // window it sits in, and a pop-out has its own window and document, so a listener on the main window alone
+    // never heard a widget in a pop-out, which stayed 1px tall.
+    this.hookedWindows = new Set();
+    this.hookWindow(window);
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      const win = leaf.view && leaf.view.containerEl && leaf.view.containerEl.win;
+      if (win) this.hookWindow(win);
+    });
+    this.registerEvent(this.app.workspace.on('window-open', (_workspaceWindow, win) => this.hookWindow(win)));
+  }
+
+  /** One listener per window: whichever widget reports its height, its iframe in that window is set to it. */
+  hookWindow(win) {
+    if (!win || this.hookedWindows.has(win)) return;
+    this.hookedWindows.add(win);
+    this.registerDomEvent(win, 'message', (event) => {
       const height = event.data && event.data.__htmlWidgetHeight;
       if (typeof height !== 'number' || height <= 0) return;
-      for (const frame of document.querySelectorAll('.html-embed-wrap iframe')) {
+      for (const frame of win.document.querySelectorAll('.html-embed-wrap iframe')) {
         if (frame.contentWindow === event.source) {
           frame.style.height = Math.ceil(height) + 'px';
           break;
